@@ -1,8 +1,8 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="list">
-        <el-form-item label="活动名称" label-width="120px">
+      <el-form :model="list" :rules="rules">
+        <el-form-item label="活动名称" label-width="120px" prop="title">
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
 
@@ -100,6 +100,9 @@ export default {
       list1: [],
       //二级的列表
       secondCateList: [],
+        rules: {
+        title: [{ required: true, message: "请输入活动名称", trigger: "blur" }], 
+      },
     };
   },
   computed: {
@@ -128,21 +131,37 @@ export default {
       };
       (this.dateTime = []), (this.list1 = []), (this.secondCateList = []);
     },
+     check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.list.title === "") {
+        errAlert("活动名称不能为空");
+          return;
+        }
+        resolve();
+      });
+    },
     //添加数据
     add() {
-      //开始的时间赋值
+         this.check().then(() => {
+        //添加逻辑
+
+         //开始的时间赋值
       this.list.begintime = this.dateTime[0].getTime();
       //结束的时间赋值
       this.list.endtime = this.dateTime[1].getTime();
       //请求添加的接口
       reqseckAdd(this.list).then((res) => {
         if (res.data.code == 200) {
-          successAlert("添加成功"), this.cancel();
+          successAlert("添加成功"), 
+          this.cancel();
           this.empty();
           this.reqSeckList();
           this.list1 = res.data.list;
         }
       });
+      });
+     
     },
     ...mapActions({
       reqSeckList: "seck/reqList",
@@ -183,10 +202,16 @@ export default {
       reqseckDetail(id).then((res) => {
         this.list = res.data.list;
         this.list.id = id;
-        (this.begintime = res.data.list.begintime),
-          (this.endtime = res.data.list.endtime);
+        this.begintime = res.data.list.begintime,
+          this.endtime = res.data.list.endtime;
+          console.log( this.begintime);
+          console.log( this.endtime);
+             console.log(new Date(parseInt(this.list.begintime)));
+             console.log(new Date(parseInt(this.list.endtime)))
+
           //给datTime赋值，现在是字符串，先转成数字再用时间戳来得到相应的值
-        this.dateTime = [
+         
+        this.dateTime =[      
           new Date(parseInt(this.list.begintime)),
           new Date(parseInt(this.list.endtime)),
         ];
@@ -197,13 +222,19 @@ export default {
     
   //更新
     update() {
-      reqseckUpdata(this.list).then((res) => {
+         this.check().then(() => {
+        //添加逻辑
+
+         reqseckUpdata(this.list).then((res) => {
         if (res.data.code == 200) {
-          successAlert("更新成功"), this.cancel();
+          successAlert("更新成功"),
+           this.cancel();
           this.empty();
           this.getGoods();
         }
       });
+      });
+     
     },
     closed() {
       if (this.info.title === "活动编辑") {

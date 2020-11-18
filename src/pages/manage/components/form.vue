@@ -3,10 +3,10 @@
     <!-- 4.绑定数据到模板 -->
     <!-- 40 绑定closed -->
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user">
-        <el-form-item label="所属角色" label-width="120px">
+      <el-form :model="user" :rules="rules">
+        <el-form-item label="所属角色" label-width="120px" prop="roleid">
           <!-- 9.通过v-model将user绑定到表单上 -->
-          <el-select v-model="user.roleid" placeholder="请选择角色">
+          <el-select v-model="user.roleid" placeholder="请选择角色" >
             <el-option
               v-for="item in roleList"
               :key="item.id"
@@ -15,14 +15,16 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="用户名" label-width="120px">
+
+        <el-form-item label="用户名" label-width="120px" prop="username">
           <!-- 9.通过v-model将user绑定到表单上 -->
           <el-input v-model="user.username" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="密码" label-width="120px">
+
+        <el-form-item label="密码" label-width="120px" prop="password">
           <el-input v-model="user.password" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="状态" label-width="120px">
+        <el-form-item label="状态" label-width="120px" >
           <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
       </el-form>
@@ -36,7 +38,7 @@
 </template>
 
 <script>
-import { successAlert } from "../../../utils/alert";
+import { successAlert ,errAlert} from "../../../utils/alert";
 import { reqRoleList,reqUserAdd, reqUserDetail, reqUserUpdata } from "../../../utils/http";
 export default {
   props: ["info"],
@@ -48,7 +50,12 @@ export default {
         password: "",
         status: 1
       },
-        roleList: []
+        roleList: [],
+         rules: {
+         username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+         password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+   
+      },
     };
   },
   methods: {
@@ -63,8 +70,24 @@ export default {
         status: 1
       }
     },
+        check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.username === "") {
+        errAlert("用户名不能为空");
+          return;
+        }
+        if (this.user.password === "") {
+        errAlert("用户密码不能为空");
+          return;
+        }
+        resolve();
+      });
+    },
     add() {
-      reqUserAdd(this.user).then(res => {
+      this.check().then(() => {
+        //添加逻辑
+         reqUserAdd(this.user).then(res => {
         if (res.data.code === 200) {
           successAlert("添加成功"),
             this.cancel(),
@@ -72,6 +95,8 @@ export default {
             this.$emit("init");
         }
       });
+      });
+     
     },
     getOne(uid) {
       reqUserDetail(uid).then(res => {
@@ -82,7 +107,9 @@ export default {
       });
     },
     update() {
-      reqUserUpdata(this.user).then(res=>{
+      this.check().then(() => {
+        //添加逻辑
+        reqUserUpdata(this.user).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
@@ -90,6 +117,8 @@ export default {
               this.$emit("init")
           }
       })
+      });
+      
     },
     closed(){
         if(this.info.title==='编辑管理员'){

@@ -43,7 +43,7 @@ data() {
       willAdd(){
       this.info={
           isshow:true,
-          title:"编辑角色",
+          title:"添加角色",
         }
     }
     },

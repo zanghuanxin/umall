@@ -26,14 +26,15 @@ axios.interceptors.response.use(res=>{
     console.log("本次请求地址是："+res.config.url);
     console.log(res);
     if(res.data.code!==200){
-        errAlert(res.data.msg)
+        errAlert(res.data.msg) 
     }
-    if(res.data.msg==="登录已过期或访问权限首先"){
+    if(res.data.msg==="登录已过期或访问权限受限"){
         store.dispatch('changUser', {})
         router.push("/login")
     }
     return res
 })
+   
 
 // ===========菜单接口 开始====================
 

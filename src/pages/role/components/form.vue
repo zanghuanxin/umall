@@ -3,12 +3,15 @@
     <!-- 绑定数据到模板 -->
     <!-- 绑定closed -->
   <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user">
-        <el-form-item label="角色名称" label-width="120px">
+      <el-form :model="user" :rules="rules">
+
+
+        <el-form-item label="角色名称" label-width="120px" prop="rolename">
           <!-- 9.通过v-model将user绑定到表单上 -->
           <el-input v-model="user.rolename" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="角色权限" label-width="120px">
+
+        <el-form-item label="角色权限" label-width="120px" prop="menus">
           <!-- 树形控件
             data:数据
             :props="{children:'哪个字段是代表有下一个子节点',label:'展示在页面的字段'}"
@@ -40,7 +43,7 @@
 </template>
 
 <script>
-import { successAlert } from "../../../utils/alert";
+import { successAlert,errAlert } from "../../../utils/alert";
 import { reqMenuList, reqRoleAdd, reqRoleDetail, reqRoleUpdata } from "../../../utils/http";
 export default {
   props: ["info"],
@@ -52,6 +55,10 @@ export default {
         status: 1,
       },
       menuList: [],
+       rules: {
+        rolename: [{ required: true, message: "请输入角色名称", trigger: "blur" }],
+   
+      },
     };
   },
   methods: {
@@ -66,8 +73,21 @@ export default {
       },
        this.$refs.tree.setCheckedKeys([]);
     },
+    check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.rolename === "") {
+        errAlert("角色名称不能为空");
+          return;
+        }
+        resolve();
+      });
+    },
+
     add() {
-      this.user.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
+      this.check().then(() => {
+        //添加逻辑
+          this.user.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
       reqRoleAdd(this.user).then(res => {
         if (res.data.code === 200) {
           successAlert("添加成功"),
@@ -76,6 +96,8 @@ export default {
             this.$emit("init");
         }
       });
+      });
+    
     },
     getOne(id) {
       reqRoleDetail(id).then(res => {
@@ -87,8 +109,10 @@ export default {
       });
     },
     update() {
-      this.user.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
-      reqRolerUpdata(this.user).then(res=>{
+      this.check().then(() => {
+        //添加逻辑
+       this.user.menus = JSON.stringify(this.$refs.tree.getCheckedKeys());
+      reqRoleUpdata(this.user).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
@@ -96,6 +120,8 @@ export default {
               this.$emit("init")
           }
       })
+      });
+    
     },
     closed(){
         if(this.info.title==='编辑角色'){

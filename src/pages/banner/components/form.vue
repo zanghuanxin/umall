@@ -1,11 +1,11 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="list">
-        <el-form-item label="标题" label-width="120px">
+      <el-form :model="list" :rules="rules">
+        <el-form-item label="标题" label-width="120px" prop="title">
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" label-width="120px" v-if="list.pid!==0">
+        <el-form-item label="图片" label-width="120px" v-if="list.pid!==0" prop="img">>
           <!-- 1.原生js上传图片 -->
           <!-- 1.绘制html +css  -->
           <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
@@ -56,7 +56,10 @@ export default {
         img: null,
         status: 1
       },
-        imgUrl: ""
+        imgUrl: "",
+         rules: {
+        title: [{ required: true, message: "请输入分类名称", trigger: "blur" }], 
+      },
     };
   },
   computed:{
@@ -76,6 +79,20 @@ export default {
       }
       this.imgUrl=""
     },
+      check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.list.title === "") {
+        errAlert("标题不能为空");
+          return;
+        }
+        if (!this.list.img) {
+          errAlert("请选择图片");
+          return;
+        }
+        resolve();
+      });
+    },
     beforeUpload(file){
       let extname = path.extname(file.name);
        let arr = [".jpg", ".jpeg", ".png", ".gif"];
@@ -93,8 +110,9 @@ export default {
       this.list.img=file;
     },
     add() {
-      
-      reqbannerAdd(this.list).then(res => {
+       this.check().then(() => {
+        //添加逻辑
+         reqbannerAdd(this.list).then(res => {
         if (res.data.code == 200) {
           successAlert("添加成功"),
             this.cancel()
@@ -102,6 +120,8 @@ export default {
             this.reqList()
         }
       });
+      });
+     
     },
     ...mapActions({
       reqList:"banner/reqList"
@@ -116,7 +136,9 @@ export default {
       });
     },
     update() {
-      reqbannerUpdate(this.list).then(res=>{
+       this.check().then(() => {
+        //添加逻辑
+          reqbannerUpdate(this.list).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
@@ -124,6 +146,8 @@ export default {
               this.reqList()
           }
       })
+      });
+    
     },
     closed(){
         if(this.info.title==='编辑轮播图'){

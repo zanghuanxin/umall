@@ -1,7 +1,7 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user">
+      <el-form :model="user" :rules="rules">
         <el-form-item label="上级分类" label-width="120px">
           <el-select v-model="user.pid" placeholder="请选择角色">
             <el-option :value="0" label="顶级分类"></el-option>
@@ -13,10 +13,10 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="分类名称" label-width="120px">
+        <el-form-item label="分类名称" label-width="120px" prop="catename">
           <el-input v-model="user.catename" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" label-width="120px" v-if="user.pid!==0">
+        <el-form-item label="图片" label-width="120px" v-if="user.pid!==0"  prop="img">
           <!-- 1.原生js上传图片 -->
           <!-- 1.绘制html +css  -->
           <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
@@ -45,7 +45,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" v-if="info.title=='添加分类'" @click="add">添 加</el-button>
+        <el-button type="primary" v-if="info.title=='添加规格'" @click="add">添 加</el-button>
         <el-button type="primary" v-else @click="update">修 改</el-button>
       </div>
         </el-dialog>
@@ -67,7 +67,10 @@ export default {
         img: null,
         status: 1
       },
-        imgUrl: ""
+        imgUrl: "",
+         rules: {
+        catename: [{ required: true, message: "请输入分类名称", trigger: "blur" }], 
+      },
     };
   },
   computed:{
@@ -87,6 +90,20 @@ export default {
         status: 1
       }
       this.imgUrl=""
+    },
+       check() {
+      return new Promise((resolve, reject) => {
+        //验证
+        if (this.user.catename === "") {
+        errAlert("分类名称不能为空");
+          return;
+        }
+        if (!this.user.img) {
+          errAlert("请选择图片");
+          return;
+        }
+        resolve();
+      });
     },
     beforeUpload(file){
       let extname = path.extname(file.name);
@@ -111,8 +128,10 @@ export default {
       this.user.img=file;
     },
     add() {
-
-      reqcateAdd(this.user).then(res => {
+        
+ this.check().then(() => {
+        //添加逻辑
+           reqcateAdd(this.user).then(res => {
         if (res.data.code == 200) {
           successAlert("添加成功"),
             this.cancel()
@@ -120,6 +139,8 @@ export default {
             this.reqList()
         }
       });
+      });
+ 
     },
     ...mapActions({
       reqList:"cate/reqList"
@@ -134,7 +155,9 @@ export default {
       });
     },
     update() {
-      reqcateUpdata(this.user).then(res=>{
+        this.check().then(() => {
+        //添加逻辑
+          reqcateUpdata(this.user).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
@@ -142,7 +165,10 @@ export default {
               this.reqList()
           }
       })
+      });
     },
+    
+    
     closed(){
         if(this.info.title==='编辑分类'){
             this.empty()
