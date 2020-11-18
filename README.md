@@ -1,21 +1,46 @@
-# mydemo
+关于我的umall
 
-> A Vue.js project
+1.首页的图没有画
 
-## Build Setup
+2.系统设置
 
-``` bash
-# install dependencies
-npm install
+    2.1菜单管理
+    已完成
 
-# serve with hot reload at localhost:8080
-npm run dev
+    2.2角色管理
 
-# build for production with minification
-npm run build
+    已完成
 
-# build for production and view the bundle analyzer report
-npm run build --report
-```
+    2.3管理员管理
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+    已完成
+
+
+3.商场管理
+
+    3.1商品分类
+
+    已完成
+
+    3.2商品规格
+
+    已完成
+
+    3.3商品管理
+
+    已完成
+
+    3.4会员管理
+
+    已完成
+
+    3.5轮播图管理
+
+    已完成
+
+    3.6秒杀活动
+
+    关于日期没有处理成功，
+
+    其他的已经完成。
+
