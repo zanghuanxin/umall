@@ -6,24 +6,21 @@
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
 
-          <div class="block">
-    <!-- <span class="demonstration">起始日期时刻为 12:00:00，结束日期时刻为 08:00:00</span> -->
-      <el-form-item label="活动期限" label-width="120px">
-  <el-card class="box-card">
-     
-  <el-date-picker 
-    v-model="dateTime" 
-    type="datetimerange" 
-    range-separator="至" 
-    start-placeholder="开始日期" 
-    end-placeholder="结束日期" 
-    size="medium">
-  </el-date-picker>
-
-    </el-card>
-     </el-form-item>
-
-  </div>
+        <div class="block">
+          <!-- <span class="demonstration">起始日期时刻为 12:00:00，结束日期时刻为 08:00:00</span> -->
+          <el-form-item label="活动期限" label-width="120px">
+            <el-card class="box-card">
+              <el-date-picker
+                v-model="dateTime"
+                type="datetimerange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                size="medium"
+              ></el-date-picker>
+            </el-card>
+          </el-form-item>
+        </div>
 
         <el-form-item label="一级分类" label-width="120px" prop="first_cateid">
           <el-select v-model="list.first_cateid" placeholder="请选择分类" @change="changeFirst">
@@ -53,8 +50,8 @@
             <el-option
               v-for="item in list1"
               :key="item.id"
-              :value="item.id"
               :label="item.goodsname"
+              :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -94,60 +91,56 @@ export default {
         endtime: null,
         first_cateid: "",
         second_cateid: "",
-        goodsid: [],
-        status: 1    
+        goodsid: "",
+        status: 1,
       },
+      //存储时间
+      dateTime: [],
+      //商品的列表
       list1: [],
+      //二级的列表
       secondCateList: [],
     };
   },
   computed: {
     ...mapGetters({
+      //一级的列表
       cateList: "cate/list",
-
+      //商品的列表
       goodlist: "goods/list",
     }),
-     dateTime: {
-        get() {
-      if (this.list.begintime && this.list.endTime) {
-         return [this.list.begintime, this.list.endTime]
-       } else {
-         return []
-      }
-    },
-    set() {
-      // console.log(v)
-      this.list.begintime = null
-      this.list.endTime = null
-    }
-  }
   },
   methods: {
+    //弹框消失
     cancel() {
       this.info.isshow = false;
     },
+    //清空数据
     empty() {
       this.list = {
         title: "",
-       begintime: null,
+        begintime: null,
         endtime: null,
         first_cateid: "",
         second_cateid: "",
-        goodsid: [],
+        goodsid: "",
         status: 1,
       };
-
-      secondCateList: [];
+      (this.dateTime = []), (this.list1 = []), (this.secondCateList = []);
     },
+    //添加数据
     add() {
+      //开始的时间赋值
+      this.list.begintime = this.dateTime[0].getTime();
+      //结束的时间赋值
+      this.list.endtime = this.dateTime[1].getTime();
+      //请求添加的接口
       reqseckAdd(this.list).then((res) => {
-        console.log(this.cateList);
-
         if (res.data.code == 200) {
           successAlert("添加成功"), this.cancel();
           this.empty();
-          this.reqList();
           this.reqSeckList();
+          this.list1 = res.data.list;
         }
       });
     },
@@ -159,52 +152,68 @@ export default {
     changeFirst() {
       //二级分类的id重置
       this.list.second_cateid = "";
+      //商品的id重置
       this.list.goodsid = "";
+      //根据二级的数据来找到goods的数据
       this.getSecondList();
     },
+    //goods的数据
     getSecondList() {
       //获取二级分类list
       reqcateList({ pid: this.list.first_cateid }).then((res) => {
         this.secondCateList = res.data.list;
       });
     },
+    //输入框改变的时候调用
     changeSecond() {
       this.list.goodsid = "";
-
-      let fid = this.list.first_cateid;
-      let sid = this.list.second_cateid;
-
-      this.getGoods({ fid, sid });
+      this.getGoods();
     },
-    getGoods(p) {
-      reqgoodsList(p).then((res) => {
+    //得到goods的数据
+    getGoods() {
+      reqgoodsList({
+        fid: this.list.first_cateid,
+        sid: this.list.second_cateid,
+      }).then((res) => {
         this.list1 = res.data.list;
       });
     },
-
+    //得到一条数据
     getOne(id) {
       reqseckDetail(id).then((res) => {
         this.list = res.data.list;
         this.list.id = id;
+        (this.begintime = res.data.list.begintime),
+          (this.endtime = res.data.list.endtime);
+          //给datTime赋值，现在是字符串，先转成数字再用时间戳来得到相应的值
+        this.dateTime = [
+          new Date(parseInt(this.list.begintime)),
+          new Date(parseInt(this.list.endtime)),
+        ];
+        this.getSecondList();
+        this.getGoods();
       });
     },
+    
+  //更新
     update() {
       reqseckUpdata(this.list).then((res) => {
         if (res.data.code == 200) {
           successAlert("更新成功"), this.cancel();
           this.empty();
-          reqSeckList: "seck/reqList";
+          this.getGoods();
         }
       });
     },
     closed() {
-      if (this.info.title === "活动修改") {
+      if (this.info.title === "活动编辑") {
         this.empty();
       }
     },
   },
 
   mounted() {
+    //一进来就请求数据。让上面值有值
     this.reqCateList();
     this.getSecondList();
     this.getGoods();

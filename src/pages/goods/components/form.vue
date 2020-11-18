@@ -1,12 +1,10 @@
 <template>
   <div>
     <el-dialog :title="info.title" :visible.sync="info.isshow" @opened="opened" @closed="closed">
-      <el-form :model="user" :rules="rules">
-        <!-- 2.绑定数据 -->
+      <el-form :model="user" :rules="rules">    
         <el-form-item label="一级分类" label-width="120px" prop="first_cateid">
           <el-select placeholder="请选择一级分类" v-model="user.first_cateid" @change="changeFirst">
-            <!-- 6.遍历一级分类 -->
-
+        
             <el-option
               v-for="item in cateList"
               :key="item.id"
@@ -135,7 +133,7 @@ export default {
         img: null,
         description: "",
         specsid: "",
-        specsattr: [], //此时是数组，后端要的是 "[]"
+        specsattr: [], 
         isnew: 1,
         ishot: 1,
         status: 1
@@ -150,23 +148,23 @@ export default {
   },
   computed: {
     ...mapGetters({
-      //3。一级分类list
+      //一级分类list
       cateList: "cate/list",
-      // 7.规格list
+      // 规格list
       specsList: "specs/list"
     })
   },
   methods: {
     ...mapActions({
-      // 4.请求一级分类list
+      // 请求一级分类list
       reqCateList: "cate/reqList",
-      //8.请求规格list
+      //请求规格list
       reqSpecsList: "specs/reqList",
       //商品list和总数
       reqGoodsList: "goods/reqList",
       reqGoodsCount: "goods/reqCount"
     }),
-    // 5.根据一级分类id，得到二级分类list
+    // 根据一级分类id，得到二级分类list
     changeFirst() {
       //二级分类的id重置
       this.user.second_cateid = "";
@@ -186,7 +184,7 @@ export default {
       this.imgUrl = URL.createObjectURL(file);
       this.user.img = file;
     },
-    //12.修改了规格，计算出规格属性的list
+    //修改了规格，计算出规格属性的list
     changeSpecsId() {
       //先将specsattr 置空
       this.user.specsattr = [];
@@ -224,7 +222,7 @@ export default {
         img: null,
         description: "",
         specsid: "",
-        specsattr: [], //此时是数组，后端要的是 "[]"
+        specsattr: [], 
         isnew: 1,
         ishot: 1,
         status: 1

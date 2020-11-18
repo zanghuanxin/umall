@@ -464,7 +464,7 @@ export const reqseckDel = (id) => {
 //更新
 export const reqseckUpdata = (list) => {
     return axios({
-        url: baseUrl + "/api/seckdit",
+        url: baseUrl + "/api/seckedit",
         method: "post",
         data:qs.stringify(list
             )
