@@ -2,43 +2,21 @@
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
       <el-form :model="user" :rules="rules">
-        <el-form-item label="上级分类" label-width="120px">
-          <el-select v-model="user.pid" placeholder="请选择角色">
-            <el-option :value="0" label="顶级分类"></el-option>
-            <el-option
-              v-for="item in cateList"
-              :key="item.id"
-              :value="item.id"
-              :label="item.catename"
-            ></el-option>
-          </el-select>
+        
+        <el-form-item label="规格名称" label-width="120px" prop="specsname">
+          <el-input v-model="user.specsname" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="分类名称" label-width="120px" prop="catename">
-          <el-input v-model="user.catename" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="图片" label-width="120px" v-if="user.pid!==0"  prop="img">
-          <!-- 1.原生js上传图片 -->
-          <!-- 1.绘制html +css  -->
-          <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
-          <!-- <div class="myupload">
-            <h3>+</h3>
-            <img class="img" v-if="imgUrl" :src="imgUrl" alt="">
-           
-            <input v-if="info.isshow" type="file" class="ipt" @change="changeFile">
-          </div>-->
 
-          <!-- 2.element-ui 上传文件 -->
-          <el-upload
-            class="avatar-uploader"
-            action="#"
-            :show-file-list="false"
-            :on-change="changeFile2"
-            :before-upload="beforeUpload"
-          >
-            <img v-if="imgUrl" :src="imgUrl" class="avatar" />
-            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-          </el-upload>
+
+<el-form-item label="规格属性" label-width="120px" v-for="(item,index) in attrArr" :key="index" prop="attrs">
+          <div class="line">
+            <el-input v-model="item.value" autocomplete="off" ></el-input>
+            <el-button type="primary" v-if="index===0" @click="addAttr" >添加规格属性</el-button>
+            <el-button type="danger" v-else @click="delAttr(index)">删除</el-button>
+          </div>
         </el-form-item>
+
+        
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
@@ -56,192 +34,133 @@
 import { errAlert, successAlert } from "../../../utils/alert";
 import path from "path";
 import { mapGetters, mapActions } from "vuex";
-import { reqRoleList,reqcateAdd, reqcateDetail, reqcateUpdata } from "../../../utils/http";
+import {  reqspecsAdd,
+  reqspecsDetail,
+  reqspecsUpdate,
+  reqspecsDel } from "../../../utils/http";
 export default {
   props: ["info"],
     data() {
     return {
       user: {
-         pid: "",
-        catename: "",
-        img: null,
+        specsname: "",
+        attrs: "",
         status: 1
       },
-        imgUrl: "",
+        attrArr: [{ value: "" }],
          rules: {
-        catename: [{ required: true, message: "请输入分类名称", trigger: "blur" }], 
+        specsname: [{ required: true, message: "请输入规格名称", trigger: "blur" }], 
+      
+        
       },
     };
   },
   computed:{
 ...mapGetters({
-    cateList: "cate/list"
+   
 })
   },
   methods: {
     cancel() {
       this.info.isshow = false;
+      this.empty() 
+    },
+     addAttr() {
+      this.attrArr.push({
+        value: ""
+      });
+    },
+      delAttr(index) {
+      this.attrArr.splice(index, 1);
     },
     empty() {
     this.user = {
-      pid: "",
-        catename: "",
-        img: null,
+     specsname: "",
+        attrs: "",
         status: 1
       }
-      this.imgUrl=""
+       this.attrArr = [{ value: "" }];
     },
        check() {
       return new Promise((resolve, reject) => {
         //验证
-        if (this.user.catename === "") {
-        errAlert("分类名称不能为空");
+        if (this.user.specsname === "") {
+        errAlert("规格名称不能为空");
           return;
         }
-        if (!this.user.img) {
-          errAlert("请选择图片");
-          return;
-        }
+         
+          
+        
         resolve();
       });
     },
-    beforeUpload(file){
-      let extname = path.extname(file.name);
-       let arr = [".jpg", ".jpeg", ".png", ".gif"];
-       if (file.size > 2 * 1024 * 1024) {
-        errAlert("文件大小不能超过2M");
-        return false;
-      } else if(!arr.includes(extname) ){
-         errAlert("请上传正确的图片格式！");
-        return false;
-      } 
-    },
-    changeFile2(e){
-      let  file=e.raw;
-      
-      this.imgUrl=URL.createObjectURL(file);
-      this.user.img=file;
-      
-     
-      
-      this.imgUrl=URL.createObjectURL(file);
-      this.user.img=file;
-    },
-    add() {
-        
+ 
+  
+    add() {     
  this.check().then(() => {
         //添加逻辑
-           reqcateAdd(this.user).then(res => {
-        if (res.data.code == 200) {
-          successAlert("添加成功"),
-            this.cancel()
-            this.empty()
-            this.reqList()
+          this.user.attrs = JSON.stringify(this.attrArr.map(item => item.value));
+      reqspecsAdd(this.user).then(res => {
+        if (res.data.code === 200) {
+          successAlert("添加成功");
+          this.cancel();
+          this.empty();
+          //刷新list
+          this.reqList()
+          this.reqCount()
         }
       });
       });
  
     },
     ...mapActions({
-      reqList:"cate/reqList"
+      reqList:"specs/reqList",
+        reqCount:"specs/reqCount",
     }),
     getOne(id) {
-      reqcateDetail(id).then(res => {
-        this.user = res.data.list;
-
-
-        this.imgUrl=this.$imgPre+ this.user.img;
-        this.user.id=id;
-      });
+      reqspecsDetail(id).then(res=>{
+            this.user=res.data.list[0]
+            this.attrArr=JSON.parse(this.user.attrs).map(item=>({value:item}))
+        })
     },
     update() {
         this.check().then(() => {
         //添加逻辑
-          reqcateUpdata(this.user).then(res=>{
-          if(res.data.code==200){
-              successAlert("修改成功"),
-              this.cancel();
-              this.empty();
-              this.reqList()
-          }
-      })
+           this.user.attrs=JSON.stringify(this.attrArr.map(item=>item.value))
+        reqspecsUpdate(this.user).then(res=>{
+            if(res.data.code==200){
+                successAlert("更新成功")
+                this.cancel()
+                this.empty()
+                this.reqList()
+            }
+        })
       });
     },
     
     
     closed(){
-        if(this.info.title==='编辑分类'){
+        if(this.info.title==='编辑规格'){
             this.empty()
         }
     }
   },
 
   mounted() {
-    reqRoleList().then(res => {
-      if (res.data.code === 200) {
-          this.roleList = res.data.list;
-      }
-    });
+  
   },
 };
 </script>
 
 <style scoped lang="stylus">
-.myupload {
-  width: 100px;
-  height: 100px;
-  border-radius: 5px;
-  border: 1px dashed #ccc;
-  position: relative;
+.line {
+  display: flex;
 }
-.myupload h3 {
-  width: 100%;
-  height: 100px;
-  font-size: 30px;
-  text-align: center;
-  line-height: 100px;
-  color: #666;
-  font-weight: 100;
+.line .el-input {
+  flex: 1;
 }
-.myupload .ipt {
-  width: 100px;
-  height: 100px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
+.line .el-button {
+  width: auto;
 }
-.myupload .img {
-  width: 100px;
-  height: 100px;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
-  // 穿透
- .add >>> .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .avatar-uploader .el-upload:hover {
-    border-color: #409EFF;
-  }
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 178px;
-    height: 178px;
-    line-height: 178px;
-    text-align: center;
-  }
-  .avatar {
-    width: 178px;
-    height: 178px;
-    display: block;
-  }
 
 </style>

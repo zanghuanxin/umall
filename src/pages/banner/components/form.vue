@@ -5,7 +5,7 @@
         <el-form-item label="标题" label-width="120px" prop="title">
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" label-width="120px" v-if="list.pid!==0" prop="img">>
+        <el-form-item label="图片" label-width="120px" v-if="list.pid!==0" prop="img">
           <!-- 1.原生js上传图片 -->
           <!-- 1.绘制html +css  -->
           <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
