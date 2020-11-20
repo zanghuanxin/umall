@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="box1">
     <!-- 5.绑定info.isshow到模板 -->
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="form" :rules="rules">
+      <el-form :model="form" :rules="rules" ref="formName">
 
         <el-form-item label="菜单名称" label-width="120px" prop="title">
           <el-input v-model="form.title" autocomplete="off"></el-input>
@@ -41,13 +41,19 @@
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
-      </el-form>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="cancel">取 消</el-button>
+        
+      <div class="footer">
+   <el-button @click="cancel">取 消</el-button>
         <el-button type="primary" @click="add" v-if="info.title==='添加菜单'">添 加</el-button>
         <el-button type="primary" @click="update" v-else>修 改</el-button>
+    
+
       </div>
+     
+
+      </el-form>
+
+      
     </el-dialog>
   </div>
 </template>
@@ -73,6 +79,11 @@ export default {
         title: [{ required: true, message: "请输入菜单名称", trigger: "blur" }],
    
       },
+      rules: {
+        title: [{ required: true, message: "请输入菜单名称" }],
+        pid:[{required:true,message:'请选择上级菜单'}],
+        url:[{required:true,message:'请选择菜单地址'}],
+      },
       icons: [
         "el-icon-s-tools",
         "el-icon-user-solid",
@@ -96,20 +107,11 @@ export default {
         status: 1,
       };
     },
-    check() {
-      return new Promise((resolve, reject) => {
-        //验证
-        if (this.form.title === "") {
-        errAlert("名称不能为空");
-          return;
-        }
-        resolve();
-      });
-    },
     add() {
-      this.check().then(() => {
-        //添加逻辑
-        reqMenuAdd(this.form).then((res) => {
+
+          this.$refs.formName.validate((valid) => {
+        if (valid) {
+ reqMenuAdd(this.form).then((res) => {
           if (res.datd.code === 200) {
             successAlert("添加成功");
             this.cancel();
@@ -119,7 +121,10 @@ export default {
             errAlert(res.data.msg);
           }
         });
-      });
+}else{
+  errAlert("添加失败");
+}
+})
     },
     changePid() {
       if (this.form.pid === 0) {
@@ -135,9 +140,9 @@ export default {
       });
     },
     update() {
-      this.check().then(() => {
-        //修改逻辑
-        reqMenuUpdate(this.form).then((res) => {
+        this.$refs.formName.validate((valid) => {
+        if (valid) {
+ reqMenuUpdate(this.form).then((res) => {
           if (res.data.code === 200) {
             successAlert("修改成功");
             this.cancel;
@@ -146,8 +151,12 @@ export default {
           } else {
             errAlert(res.data.msg);
           }
-        });
-      });
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     closed() {
       if (this.info.title === "编辑菜单") {
@@ -160,4 +169,13 @@ export default {
 </script>
 
 <style>
+.box1{
+  position: relative;
+}
+
+.footer{
+position:absolute;
+bottom:10px;
+right:10px;
+}
 </style>

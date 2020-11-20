@@ -1,43 +1,33 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="list" :rules="rules">
+      <el-form :model="list" :rules="rules" ref="formName" >
         <el-form-item label="标题" label-width="120px" prop="title">
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="图片" label-width="120px" v-if="list.pid!==0" prop="img">
-          <!-- 1.原生js上传图片 -->
-          <!-- 1.绘制html +css  -->
-          <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
-          <!-- <div class="myupload">
-            <h3>+</h3>
-            <img class="img" v-if="imgUrl" :src="imgUrl" alt="">
-           
-            <input v-if="info.isshow" type="file" class="ipt" @change="changeFile">
-          </div>-->
-
-          <!-- 2.element-ui 上传文件 -->
+     <el-form-item label="图片" label-width="120px" v-if="list.pid!==0" prop="img">
           <el-upload
             class="avatar-uploader"
             action="#"
             :show-file-list="false"
             :on-change="changeFile2"
-            :before-upload="beforeUpload"
-           
           >
             <img v-if="imgUrl" :src="imgUrl" class="avatar" />
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
+
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="list.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
+
+           <div class="footer" >
       <el-button type="primary" v-if="info.title=='添加轮播图'" @click="add">添 加</el-button>
         <el-button type="primary" v-else @click="update">修 改</el-button>
 
       </div>
+      </el-form>
+   
         </el-dialog>
   </div>
 </template>
@@ -58,7 +48,7 @@ export default {
       },
         imgUrl: "",
          rules: {
-        title: [{ required: true, message: "请输入分类名称", trigger: "blur" }], 
+        title: [{ required: true, message: "请输入分类名称",}], 
       },
     };
   },
@@ -223,5 +213,13 @@ export default {
     height: 178px;
     display: block;
   }
+    .add{
+  position: relative;
+}
+.footer{
+position:absolute;
+bottom:10px;
+right:10px;
+}
 
 </style>

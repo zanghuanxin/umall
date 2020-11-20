@@ -1,9 +1,9 @@
 <template>
-   <div>
+   <div class="box1">
     <!-- 4.绑定数据到模板 -->
     <!-- 40 绑定closed -->
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user" :rules="rules">
+      <el-form :model="user" :rules="rules" ref="formName">
         <el-form-item label="所属角色" label-width="120px" prop="roleid">
           <!-- 9.通过v-model将user绑定到表单上 -->
           <el-select v-model="user.roleid" placeholder="请选择角色" >
@@ -27,12 +27,15 @@
         <el-form-item label="状态" label-width="120px" >
           <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
+  <div class="footer" >
         <el-button @click="cancel">取 消</el-button>
         <el-button type="primary" v-if="info.title=='添加管理员'" @click="add">添 加</el-button>
         <el-button type="primary" v-else @click="update">修 改</el-button>
       </div>
+
+
+      </el-form>
+    
     </el-dialog>
   </div>
 </template>
@@ -52,8 +55,9 @@ export default {
       },
         roleList: [],
          rules: {
-         username: [{ required: true, message: "请输入用户名", trigger: "blur" }],
-         password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+         roleid: [{ required: true, message: "请选择所属角色"}],
+         username: [{ required: true, message: "请输入用户名" }],
+          password: [{ required: true, message: "请输入密码" }],
    
       },
     };
@@ -70,33 +74,24 @@ export default {
         status: 1
       }
     },
-        check() {
-      return new Promise((resolve, reject) => {
-        //验证
-        if (this.user.username === "") {
-        errAlert("用户名不能为空");
-          return;
-        }
-        if (this.user.password === "") {
-        errAlert("用户密码不能为空");
-          return;
-        }
-        resolve();
-      });
-    },
     add() {
-      this.check().then(() => {
-        //添加逻辑
-         reqUserAdd(this.user).then(res => {
+        this.$refs.formName.validate((valid) => {
+        if (valid) {
+      reqUserAdd(this.user).then(res => {
         if (res.data.code === 200) {
           successAlert("添加成功"),
             this.cancel(),
             this.empty(),
             this.$emit("init");
-        }
-      });
-      });
-     
+        } else {
+            errAlert(res.data.msg);
+          }
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     getOne(uid) {
       reqUserDetail(uid).then(res => {
@@ -107,18 +102,23 @@ export default {
       });
     },
     update() {
-      this.check().then(() => {
-        //添加逻辑
-        reqUserUpdata(this.user).then(res=>{
+        this.$refs.formName.validate((valid) => {
+        if (valid) {
+    reqUserUpdata(this.user).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
               this.empty();
               this.$emit("init")
+          }else {
+            errAlert(res.data.msg);
           }
-      })
-      });
-      
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     closed(){
         if(this.info.title==='编辑管理员'){
@@ -138,4 +138,13 @@ export default {
 </script>
 
 <style>
+.box1{
+  position: relative;
+}
+
+.footer{
+position:absolute;
+bottom:10px;
+right:10px;
+}
 </style>

@@ -1,8 +1,8 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="user" :rules="rules">
-        <el-form-item label="上级分类" label-width="120px">
+      <el-form :model="user" :rules="rules" ref="formName">
+        <el-form-item label="上级分类" label-width="120px" prop="pid">
           <el-select v-model="user.pid" placeholder="请选择角色">
             <el-option :value="0" label="顶级分类"></el-option>
             <el-option
@@ -17,23 +17,11 @@
           <el-input v-model="user.catename" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="图片" label-width="120px" v-if="user.pid!==0" prop="img">
-          <!-- 1.原生js上传图片 -->
-          <!-- 1.绘制html +css  -->
-          <!-- 如果添加成功，此时，input上的文件应该清掉，所以直接将input节点清除 -->
-          <!-- <div class="myupload">
-            <h3>+</h3>
-            <img class="img" v-if="imgUrl" :src="imgUrl" alt="">
-           
-            <input v-if="info.isshow" type="file" class="ipt" @change="changeFile">
-          </div>-->
-
-          <!-- 2.element-ui 上传文件 -->
           <el-upload
             class="avatar-uploader"
             action="#"
             :show-file-list="false"
             :on-change="changeFile2"
-            :before-upload="beforeUpload"
           >
             <img v-if="imgUrl" :src="imgUrl" class="avatar" />
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -42,12 +30,14 @@
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
+
+           <div class="footer" >
         <el-button @click="cancel">取 消</el-button>
         <el-button type="primary" v-if="info.title=='添加分类'" @click="add">添 加</el-button>
         <el-button type="primary" v-else @click="update">修 改</el-button>
       </div>
+      </el-form>
+   
         </el-dialog>
   </div>
 </template>
@@ -69,7 +59,9 @@ export default {
       },
         imgUrl: "",
          rules: {
-        catename: [{ required: true, message: "请输入分类名称", trigger: "blur" }], 
+        pid: [{ required: true, message: "请选择上级分类"}], 
+        catename: [{ required: true, message: "请输入分类名称"}], 
+        img: [{ required: true, message: "请添加图片"}], 
       },
 
     };
@@ -82,6 +74,7 @@ export default {
   methods: {
     cancel() {
       this.info.isshow = false;
+      this.empty()
     },
     empty() {
     this.user = {
@@ -92,21 +85,7 @@ export default {
       }
       this.imgUrl=""
     },
-     check() {
-      return new Promise((resolve, reject) => {
-        //验证
-        if (this.user.catename === "") {
-        errAlert("分类名称不能为空");
-          return;
-        }
-        if (!this.user.img) {
-          errAlert("请选择图片");
-          return;
-        }
-        resolve();
-      });
-    },
-    beforeUpload(file){
+    reUpload(file){
       let extname = path.extname(file.name);
        let arr = [".jpg", ".jpeg", ".png", ".gif"];
        if (file.size > 2 * 1024 * 1024) {
@@ -130,18 +109,23 @@ export default {
     },
    
 add() {
-
-      this.check().then(() => {
-        //添加逻辑
-           reqcateAdd(this.user).then(res => {
+        this.$refs.formName.validate((valid) => {
+        if (valid) {
+   reqcateAdd(this.user).then(res => {
         if (res.data.code == 200) {
           successAlert("添加成功"),
             this.cancel()
             this.empty()
             this.reqList()
-        }
-      });
-      });
+        } else {
+            errAlert(res.data.msg);
+          }
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     ...mapActions({
       reqList:"cate/reqList"
@@ -157,18 +141,25 @@ add() {
     },
   
     update() {
-    this.check().then(() => {
-        //添加逻辑
-         reqcateUpdata(this.user).then(res=>{
+              this.$refs.formName.validate((valid) => {
+        if (valid) {
+ reqcateUpdata(this.user).then(res=>{
           if(res.data.code==200){
               successAlert("修改成功"),
               this.cancel();
               this.empty();
               this.reqList()
+          } else {
+            errAlert(res.data.msg);
           }
-      })
-      });
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
+
       closed(){
         if(this.info.title==='编辑分类'){
             this.empty()
@@ -249,5 +240,12 @@ add() {
     height: 178px;
     display: block;
   }
-
+  .add{
+  position: relative;
+}
+.footer{
+position:absolute;
+bottom:10px;
+right:10px;
+}
 </style>

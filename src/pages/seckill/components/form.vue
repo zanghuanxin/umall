@@ -1,14 +1,14 @@
 <template>
   <div class="add">
     <el-dialog :title="info.title" :visible.sync="info.isshow" @closed="closed">
-      <el-form :model="list" :rules="rules">
+      <el-form :model="list" :rules="rules" ref="formName">
         <el-form-item label="活动名称" label-width="120px" prop="title">
           <el-input v-model="list.title" autocomplete="off"></el-input>
         </el-form-item>
 
         <div class="block">
           <!-- <span class="demonstration">起始日期时刻为 12:00:00，结束日期时刻为 08:00:00</span> -->
-          <el-form-item label="活动期限" label-width="120px">
+          <el-form-item label="活动期限" label-width="120px" >
             <el-card class="box-card">
               <el-date-picker
                 v-model="dateTime"
@@ -17,6 +17,7 @@
                 start-placeholder="开始日期"
                 end-placeholder="结束日期"
                 size="medium"
+                value-format="timestamp"
               ></el-date-picker>
             </el-card>
           </el-form-item>
@@ -59,12 +60,14 @@
         <el-form-item label="状态" label-width="120px">
           <el-switch v-model="list.status" :active-value="1" :inactive-value="2"></el-switch>
         </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
+
+        <div class="footer" >
         <el-button @click="cancel">取 消</el-button>
         <el-button type="primary" v-if="info.title=='活动添加'" @click="add">添 加</el-button>
         <el-button type="primary" v-else @click="update">修 改</el-button>
       </div>
+      </el-form>
+      
     </el-dialog>
   </div>
 </template>
@@ -101,7 +104,10 @@ export default {
       //二级的列表
       secondCateList: [],
         rules: {
-        title: [{ required: true, message: "请输入活动名称", trigger: "blur" }], 
+        title: [{ required: true, message: "请输入活动名称"}], 
+        first_cateid: [{ required: true, message: "请选择一级分类"}],
+        second_cateid: [{ required: true, message: "请选择二级分类" }],
+        goodsid: [{ required: true, message: "请选择商品"}],
       },
     };
   },
@@ -117,6 +123,7 @@ export default {
     //弹框消失
     cancel() {
       this.info.isshow = false;
+      this.empty()
     },
     //清空数据
     empty() {
@@ -131,37 +138,39 @@ export default {
       };
       (this.dateTime = []), (this.list1 = []), (this.secondCateList = []);
     },
-     check() {
-      return new Promise((resolve, reject) => {
-        //验证
-        if (this.list.title === "") {
-        errAlert("活动名称不能为空");
-          return;
-        }
-        resolve();
-      });
-    },
+  
     //添加数据
     add() {
-         this.check().then(() => {
-        //添加逻辑
 
-         //开始的时间赋值
-      this.list.begintime = this.dateTime[0].getTime();
+this.$refs.formName.validate((valid) => {
+        if (valid) {
+    //开始的时间赋值
+      this.list.begintime = this.dateTime[0]
       //结束的时间赋值
-      this.list.endtime = this.dateTime[1].getTime();
+      this.list.endtime = this.dateTime[1]
       //请求添加的接口
+       if(this.dateTime){
+            errAlert("请选择秒杀时间")
+            return;
+          }
       reqseckAdd(this.list).then((res) => {
         if (res.data.code == 200) {
           successAlert("添加成功"), 
-          this.cancel();
-          this.empty();
           this.reqSeckList();
+          this.cancel();
+          this.empty();         
           this.list1 = res.data.list;
-        }
-      });
-      });
-     
+          console.log( this.begintime);
+          console.log( this.endtime);
+        } else {
+            errAlert(res.data.msg);
+          }
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     ...mapActions({
       reqSeckList: "seck/reqList",
@@ -203,7 +212,7 @@ export default {
         this.list = res.data.list;
         this.list.id = id;
         this.begintime = res.data.list.begintime,
-          this.endtime = res.data.list.endtime;
+        this.endtime = res.data.list.endtime;
           console.log( this.begintime);
           console.log( this.endtime);
              console.log(new Date(parseInt(this.list.begintime)));
@@ -222,19 +231,34 @@ export default {
     
   //更新
     update() {
-         this.check().then(() => {
-        //添加逻辑
-
-         reqseckUpdata(this.list).then((res) => {
+        this.$refs.formName.validate((valid) => {
+        if (valid) {
+   this.list.begintime = this.dateTime[0]
+      //结束的时间赋值
+      this.list.endtime = this.dateTime[1]
+       if(this.dateTime){
+            errAlert("请选择秒杀时间")
+            return;
+          }
+  reqseckUpdata(this.list).then((res) => {
+           console.log(res);
         if (res.data.code == 200) {
           successAlert("更新成功"),
+          this.reqSeckList();
+          // this.reqseckDetail()
            this.cancel();
           this.empty();
           this.getGoods();
-        }
-      });
-      });
-     
+        
+        }  else {
+            errAlert(res.data.msg);
+          }
+
+})
+}else{
+   errAlert("添加失败");
+}
+})
     },
     closed() {
       if (this.info.title === "活动编辑") {
@@ -313,5 +337,13 @@ export default {
   width: 178px;
   height: 178px;
   display: block;
+}
+  .add{
+  position: relative;
+}
+.footer{
+position:absolute;
+bottom:10px;
+right:10px;
 }
 </style>
